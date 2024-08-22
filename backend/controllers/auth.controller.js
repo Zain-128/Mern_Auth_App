@@ -47,7 +47,7 @@ export const register = async (req, res, next) => {
     // return the response
 
     return res.status(201).json({
-      message: "User Created Successfully !",
+      message: "User Created Successfully!",
       data: {
         user: {
           ...user.doc,
