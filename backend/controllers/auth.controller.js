@@ -3,6 +3,7 @@ import userModel from "../models/user.model.js";
 import { generateJWTToeken, VerifcationToken } from "../utils/index.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { sendEmail } from "../utils/mail.service.js";
 export const register = async (req, res, next) => {
   try {
     // Validate Incoming Data
@@ -40,6 +41,8 @@ export const register = async (req, res, next) => {
 
     await user.save();
 
+    console.log(user);
+    await sendEmail(user);
     // Genrating JWT TOKEN
 
     const token = await generateJWTToeken(res, user._id);
