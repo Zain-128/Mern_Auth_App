@@ -10,7 +10,7 @@ export const register = async (req, res, next) => {
 
     if (error) {
       console.error("Validation error:", error.details);
-      throw new Error(`Error :  ${error.details} `);
+      throw new Error(`Error :  ${error.details.map((ele) => ele.message)} `);
     }
 
     const { email, password, name } = req.body;
@@ -42,7 +42,7 @@ export const register = async (req, res, next) => {
 
     // Genrating JWT TOKEN
 
-    await generateJWTToeken(req, user._id);
+    const token = await generateJWTToeken(res, user._id);
 
     // return the response
 
@@ -50,7 +50,7 @@ export const register = async (req, res, next) => {
       message: "User Created Successfully!",
       data: {
         user: {
-          ...user.doc,
+          ...user._doc,
           password: undefined,
         },
         token,
