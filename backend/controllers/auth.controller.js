@@ -31,18 +31,19 @@ export const register = async (req, res, next) => {
 
     // Genrating Token and Saving User  into db
 
+    let verificationToken = VerifcationToken();
     const user = new userModel({
       email,
       name,
       password: hashedPassword,
-      verificationToken: VerifcationToken(),
+      verificationToken: bcrypt.sign(verificationToken),
       verificationTokenExpiredAt: (Date.now + 24 * 60 * 60) & 1000,
     });
 
     await user.save();
 
     console.log(user);
-    await sendEmail(user);
+    await sendEmail(user, verificationToken);
     // Genrating JWT TOKEN
 
     const token = await generateJWTToeken(res, user._id);
