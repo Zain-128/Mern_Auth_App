@@ -32,3 +32,13 @@ export const registerUserSchema = Joi.object({
       "any.required": "Password is required",
     }),
 });
+
+export const verifyEmail = Joi.object({
+  email: Joi.string()
+    .email({ tlds: { allow: false } }) // Validate email format
+    .required(), // Make email required
+  token: Joi.string()
+    .min(10) // Minimum length of token (adjust as needed)
+    .max(256) // Maximum length of token (adjust as needed)
+    .required(), // Make token required
+});

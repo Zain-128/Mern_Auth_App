@@ -1,12 +1,6 @@
 import { MailtrapClient } from "mailtrap";
 // import { transporter } from "../config/EmailTransporter.js";
 
-console.log(
-  process.env.MAILTRAP_ENDPOINT,
-  process.env.MAILTRAP_TOKEN,
-  process.env,
-  "TOKENNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"
-);
 const client = new MailtrapClient({
   endpoint: "https://send.api.mailtrap.io/" || process.env.MAILTRAP_ENDPOINT,
   token: "3687a42681b2696d959306fc71889385" || process.env.MAILTRAP_TOKEN,
@@ -27,8 +21,8 @@ export const sendEmail = async (user, token) => {
     .send({
       from: sender,
       to: recipients,
-      subject: "You are awesome!",
-      text: "Your OTP is : " + token,
+      subject: "Verification Code",
+      text: "Your code is : " + token,
       category: "Integration Test",
     })
     .then(console.log, console.error);

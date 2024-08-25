@@ -1,8 +1,12 @@
-import { registerUserSchema } from "../constants/validation.schemas.js";
+import {
+  registerUserSchema,
+  verifyEmail,
+} from "../constants/validation.schemas.js";
 import userModel from "../models/user.model.js";
 import { generateJWTToeken, VerifcationToken } from "../utils/index.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import moment from "moment";
 import { sendEmail } from "../utils/mail.service.js";
 export const register = async (req, res, next) => {
   try {
@@ -32,12 +36,13 @@ export const register = async (req, res, next) => {
     // Genrating Token and Saving User  into db
 
     let verificationToken = VerifcationToken();
+    const hashedVerificationToken = await bcrypt.hash(verificationToken, 10);
     const user = new userModel({
       email,
       name,
       password: hashedPassword,
-      verificationToken: bcrypt.sign(verificationToken),
-      verificationTokenExpiredAt: (Date.now + 24 * 60 * 60) & 1000,
+      verificationToken: hashedVerificationToken,
+      verificationTokenExpiredAt: Date.now(),
     });
 
     await user.save();
@@ -63,5 +68,62 @@ export const register = async (req, res, next) => {
     });
   } catch (error) {
     return next(error);
+  }
+};
+
+export const VerifyUser = async (req, res, next) => {
+  try {
+    const { error, value } = verifyEmail.validate(req.body);
+
+    if (error) {
+      console.error("Validation error:", error.details);
+      throw new Error(`Error :  ${error.details.map((ele) => ele.message)} `);
+    }
+
+    const { email, token } = req.body;
+
+    const user = await userModel.findOne({ email });
+
+    if (!user) {
+      return next({
+        status: 400,
+        message: "User Not Found ! ",
+      });
+    }
+
+    const isTokenOkay = await bcrypt.compare(token, user.verificationToken);
+
+    console.log("yjsisisiisis", isTokenOkay);
+    if (!isTokenOkay) {
+      return next({
+        status: 403,
+        message: "otp does not Exists ! ",
+      });
+    }
+
+    let hours = moment().diff(moment(user.verificationTokenExpiredAt), "hours");
+
+    if (hours >= 24) {
+      user.verificationToken = undefined;
+      user.verificationTokenExpiredAt = undefined;
+      await user.save();
+      return next({
+        status: 403,
+        message: "OTP Expired !",
+      });
+    }
+
+    user.verificationToken = undefined;
+    user.verificationTokenExpiredAt = undefined;
+    user.isVerified = true;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "User Verified Successfully!",
+    });
+  } catch (err) {
+    next(err);
   }
 };
