@@ -158,7 +158,6 @@ export const loginUser = async (req, res, next) => {
       });
     }
 
-    console.log(process.env.JWT_SECRET_KEY, "SECRETTTTTTTTTTTTTTTTTTTTTTT");
     let token = await jwt.sign(
       { payload: user._id },
       process.env.JWT_SECRET_KEY,
