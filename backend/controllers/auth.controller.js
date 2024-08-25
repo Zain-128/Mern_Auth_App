@@ -158,13 +158,7 @@ export const loginUser = async (req, res, next) => {
       });
     }
 
-    let token = await jwt.sign(
-      { payload: user._id },
-      process.env.JWT_SECRET_KEY,
-      {
-        expiresIn: "1d",
-      }
-    );
+    const token = await generateJWTToeken(res, user._id);
 
     res.cookie("auth_token", token, {
       maxAge: 1 * 24 * 60 * 60 * 1000,
@@ -193,6 +187,42 @@ export const logoutUser = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "User Logged Out Successfully!",
+      data: null,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+export const forgetPassword = async (req, res, next) => {
+  try {
+    const { error, value } = loginUserSchema.validate(req.body);
+
+    if (error) {
+      console.error("Validation error:", error.details);
+      throw new Error(`Error :  ${error.details.map((ele) => ele.message)} `);
+    }
+
+    const { email } = req.body;
+
+    const user = await userModel.findOne({ email });
+
+    if (!user) {
+      return next({
+        status: 400,
+        message: "User Not Found ! ",
+      });
+    }
+
+    const token = await VerifcationToken();
+
+    await sendEmail(user, token);
+
+    user.resetToken = token;
+    user.resetTokenExpiredAt = Date.now();
+
+    return res.status(200).json({
+      success: true,
+      message: "Email Send Successfully !",
       data: null,
     });
   } catch (err) {

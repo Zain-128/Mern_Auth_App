@@ -58,3 +58,9 @@ export const loginUserSchema = Joi.object({
       "any.required": "Password is required",
     }),
 });
+
+export const forgetPasswordSchema = Joi.object({
+  email: Joi.string()
+    .email({ tlds: { allow: false } }) // Validate email format
+    .required(), // Make email required
+});
