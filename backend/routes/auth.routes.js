@@ -1,5 +1,9 @@
 import express from "express";
-import { register, VerifyUser } from "../controllers/auth.controller.js";
+import {
+  loginUser,
+  register,
+  VerifyUser,
+} from "../controllers/auth.controller.js";
 const router = express.Router();
 
 router.get("/test", (req, res) => {
@@ -7,4 +11,5 @@ router.get("/test", (req, res) => {
 });
 router.post("/register", register);
 router.post("/verify-user", VerifyUser);
+router.post("/login-user", loginUser);
 export { router };

@@ -1,4 +1,5 @@
 import {
+  loginUserSchema,
   registerUserSchema,
   verifyEmail,
 } from "../constants/validation.schemas.js";
@@ -122,6 +123,64 @@ export const VerifyUser = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "User Verified Successfully!",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const loginUser = async (req, res, next) => {
+  try {
+    const { error, value } = loginUserSchema.validate(req.body);
+
+    if (error) {
+      console.error("Validation error:", error.details);
+      throw new Error(`Error :  ${error.details.map((ele) => ele.message)} `);
+    }
+
+    const { email, password } = req.body;
+
+    const user = await userModel.findOne({ email });
+
+    if (!user) {
+      return next({
+        status: 400,
+        message: "User Not Found ! ",
+      });
+    }
+
+    const isPasswordOkay = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordOkay) {
+      return next({
+        status: 403,
+        message: "Invalid Creadentials !",
+      });
+    }
+
+    console.log(process.env.JWT_SECRET_KEY, "SECRETTTTTTTTTTTTTTTTTTTTTTT");
+    let token = await jwt.sign(
+      { payload: user._id },
+      process.env.JWT_SECRET_KEY,
+      {
+        expiresIn: "1d",
+      }
+    );
+
+    res.cookie("auth_token", token, {
+      maxAge: 1 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "User Logged in Successfully!",
+      data: {
+        user: { ...user._doc, password: undefined },
+        token,
+      },
     });
   } catch (err) {
     next(err);
