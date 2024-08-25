@@ -1,4 +1,5 @@
 import {
+  changePasswordSchema,
   loginUserSchema,
   registerUserSchema,
   verifyEmail,
@@ -224,6 +225,96 @@ export const forgetPassword = async (req, res, next) => {
       success: true,
       message: "Email Send Successfully !",
       data: null,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+export const verifyForgetPassword = async (req, res, next) => {
+  try {
+    const { error, value } = verifyEmail.validate(req.body);
+
+    if (error) {
+      console.error("Validation error:", error.details);
+      throw new Error(`Error :  ${error.details.map((ele) => ele.message)} `);
+    }
+
+    const { email, token } = req.body;
+
+    const user = await userModel.findOne({ email });
+
+    if (!user) {
+      return next({
+        status: 400,
+        message: "User Not Found ! ",
+      });
+    }
+
+    const isTokenOkay = await bcrypt.compare(token, user.resetToken);
+
+    console.log("yjsisisiisis", isTokenOkay);
+    if (!isTokenOkay) {
+      return next({
+        status: 403,
+        message: "otp does not Exists ! ",
+      });
+    }
+
+    let hours = moment().diff(moment(user.resetTokenExpiredAt), "hours");
+
+    if (hours >= 24) {
+      user.resetToken = undefined;
+      user.resetTokenExpiredAt = undefined;
+      await user.save();
+      return next({
+        status: 403,
+        message: "OTP Expired !",
+      });
+    }
+
+    user.resetToken = undefined;
+    user.resetTokenExpiredAt = undefined;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Change Your Password!",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const changePassword = async (req, res, next) => {
+  try {
+    const { error, value } = changePasswordSchema.validate(req.body);
+
+    if (error) {
+      console.error("Validation error:", error.details);
+      throw new Error(`Error :  ${error.details.map((ele) => ele.message)} `);
+    }
+
+    const { email, password } = req.body;
+
+    const user = await userModel.findOne({ email });
+
+    if (!user) {
+      return next({
+        status: 400,
+        message: "User Not Found ! ",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    user.password = hashedPassword;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Your Password Changed Successfully !",
     });
   } catch (err) {
     next(err);

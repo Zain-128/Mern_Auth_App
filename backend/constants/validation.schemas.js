@@ -64,3 +64,22 @@ export const forgetPasswordSchema = Joi.object({
     .email({ tlds: { allow: false } }) // Validate email format
     .required(), // Make email required
 });
+
+export const changePasswordSchema = Joi.object({
+  email: Joi.string()
+    .email({ tlds: { allow: false } }) // Validate email format
+    .required(), // Make email required
+  password: Joi.string()
+    .min(8) // Minimum length of 8 characters
+    .max(100) // Maximum length of 100 characters
+    .required() // Field is required
+    .messages({
+      "string.base": "Password should be a type of text",
+      "string.min": "Password should have a minimum length of {#limit}",
+      "string.max": "Password should have a maximum length of {#limit}",
+      "any.required": "Password is required",
+    }),
+  confirmPassword: Joi.string()
+    .valid(Joi.ref("password")) // Ensure confirmPassword matches password
+    .required(),
+});
